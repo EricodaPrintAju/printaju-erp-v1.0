@@ -1,0 +1,1542 @@
+import React, { useState, useMemo } from 'react';
+import { 
+  LayoutDashboard, 
+  FileText, 
+  Kanban, 
+  Users, 
+  Package, 
+  Wrench, 
+  Truck, 
+  DollarSign, 
+  Plus, 
+  Search, 
+  Edit, 
+  Trash2, 
+  CheckCircle, 
+  Clock, 
+  Printer, 
+  AlertTriangle, 
+  TrendingUp, 
+  TrendingDown, 
+  ChevronRight, 
+  Eye, 
+  Filter, 
+  X, 
+  Save, 
+  Calendar,
+  Layers,
+  ShoppingBag,
+  ArrowRight
+} from 'lucide-react';
+
+// --- MOCK DATA INICIAL ---
+const initialClients = [
+  { id: 1, name: 'Empresa ABC LTDA', doc: '12.345.678/0001-90', phone: '(11) 98765-4321', email: 'contato@abc.com.br', address: 'Av. Paulista, 1000 - SP' },
+  { id: 2, name: 'Marcos Silva (Freelancer)', doc: '321.654.987-00', phone: '(11) 91234-5678', email: 'marcos@design.com', address: 'Rua das Flores, 42 - SP' },
+  { id: 3, name: 'Restaurante Sabor & Arte', doc: '98.765.432/0001-10', phone: '(11) 99887-7665', email: 'pedidos@saborarte.com', address: 'Rua Augusta, 500 - SP' },
+];
+
+const initialProducts = [
+  { id: 1, name: 'Lona 440g Brilho', type: 'Matéria-Prima', unit: 'm²', cost: 12.50, price: 35.00, stock: 150, minStock: 30 },
+  { id: 2, name: 'Vinil Adesivo Promo White', type: 'Matéria-Prima', unit: 'm²', cost: 9.80, price: 28.00, stock: 200, minStock: 50 },
+  { id: 3, name: 'Papel Couché 300g A3', type: 'Matéria-Prima', unit: 'Folha', cost: 0.85, price: 2.50, stock: 450, minStock: 100 },
+  { id: 4, name: 'Caneca Cerâmica Branca', type: 'Produto Acabado', unit: 'Unidade', cost: 8.00, price: 25.00, stock: 18, minStock: 25 },
+];
+
+const initialServices = [
+  { id: 1, name: 'Banner com Ilhós', category: 'Comunicação Visual', billingType: 'm2', basePrice: 45.00 },
+  { id: 2, name: 'Cartão de Visita 9x5cm (1000un)', category: 'Impressão Offset', billingType: 'unit', basePrice: 85.00 },
+  { id: 3, name: 'Adesivo Recorte Eletrônico', category: 'Comunicação Visual', billingType: 'm2', basePrice: 60.00 },
+  { id: 4, name: 'Impressão Digital A4 Formato', category: 'Gráfica Rápida', billingType: 'unit', basePrice: 1.50 },
+];
+
+const initialSuppliers = [
+  { id: 1, name: 'Mídias & Cia Distruibidora', contact: 'Roberto', phone: '(11) 3333-4444', email: 'vendas@midiascia.com', category: 'Mídia / Papel' },
+  { id: 2, name: 'Tintas ColorJet Brasil', contact: 'Ana Paula', phone: '(11) 2222-1111', email: 'contato@colorjet.com', category: 'Tinta / Químicos' },
+];
+
+const initialOrders = [
+  {
+    id: 1001,
+    clientName: 'Empresa ABC LTDA',
+    clientId: 1,
+    date: '2026-11-05',
+    deliveryDate: '2026-11-08',
+    status: 'Em Impressão',
+    priority: 'Alta',
+    items: [
+      { id: 1, description: 'Banner Lona 440g - Evento Novembro', calcType: 'm2', width: 2, height: 1, qty: 2, unitPrice: 45.00, total: 180.00, finishing: 'Bastão e Corda' }
+    ],
+    total: 180.00,
+    discount: 0,
+    advancePayment: 90.00,
+    techNotes: 'Conferir alinhamento de sangria na margem superior.'
+  },
+  {
+    id: 1002,
+    clientName: 'Marcos Silva (Freelancer)',
+    clientId: 2,
+    date: '2026-11-06',
+    deliveryDate: '2026-11-07',
+    status: 'Aguardando Arte',
+    priority: 'Urgente',
+    items: [
+      { id: 1, description: 'Cartão de Visita Couché 300g (1000un)', calcType: 'unit', qty: 2, unitPrice: 85.00, total: 170.00, finishing: 'Verniz Localizado' }
+    ],
+    total: 170.00,
+    discount: 10.00,
+    advancePayment: 160.00,
+    techNotes: 'Cliente enviará o PDF/X-1a reformulado via WhatsApp.'
+  },
+  {
+    id: 1003,
+    clientName: 'Restaurante Sabor & Arte',
+    clientId: 3,
+    date: '2026-11-04',
+    deliveryDate: '2026-11-09',
+    status: 'Acabamento',
+    priority: 'Média',
+    items: [
+      { id: 1, description: 'Adesivo Vinil Balcão', calcType: 'm2', width: 3, height: 0.8, qty: 1, unitPrice: 60.00, total: 144.00, finishing: 'Laminação Fosca' }
+    ],
+    total: 144.00,
+    discount: 0,
+    advancePayment: 72.00,
+    techNotes: 'Corte reto nas bordas laterais.'
+  },
+  {
+    id: 1004,
+    clientName: 'Empresa ABC LTDA',
+    clientId: 1,
+    date: '2026-11-02',
+    deliveryDate: '2026-11-04',
+    status: 'Entregue',
+    priority: 'Baixa',
+    items: [
+      { id: 1, description: 'Impressão Folhetos A5 (500un)', calcType: 'unit', qty: 1, unitPrice: 120.00, total: 120.00, finishing: 'Refile Gráfico' }
+    ],
+    total: 120.00,
+    discount: 0,
+    advancePayment: 120.00,
+    techNotes: 'Entregue para o recepcionista Carlos.'
+  }
+];
+
+const initialFinances = [
+  { id: 1, date: '2026-11-02', type: 'Entrada', category: 'Venda de OS (#1004)', description: 'Pagamento Integral OS #1004', amount: 120.00 },
+  { id: 2, date: '2026-11-03', type: 'Saída', category: 'Insumos', description: 'Compra Lona 440g Roll', amount: 450.00 },
+  { id: 3, date: '2026-11-05', type: 'Entrada', category: 'Sinal OS (#1001)', description: 'Sinal de 50% OS #1001', amount: 90.00 },
+  { id: 4, date: '2026-11-06', type: 'Entrada', category: 'Sinal OS (#1002)', description: 'Pagamento total antecipado OS #1002', amount: 160.00 },
+];
+
+const STATUS_STAGES = [
+  'Aguardando Arte',
+  'Pré-Impressão',
+  'Em Impressão',
+  'Acabamento',
+  'Pronto para Retirada',
+  'Entregue'
+];
+
+export default function PrintFlowERP() {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // State principal da aplicação (CRUD Simulado)
+  const [clients, setClients] = useState(initialClients);
+  const [products, setProducts] = useState(initialProducts);
+  const [services, setServices] = useState(initialServices);
+  const [suppliers, setSuppliers] = useState(initialSuppliers);
+  const [orders, setOrders] = useState(initialOrders);
+  const [finances, setFinances] = useState(initialFinances);
+
+  // Modais State
+  const [isNewOSOpen, setIsNewOSOpen] = useState(false);
+  const [selectedOSForView, setSelectedOSForView] = useState(null);
+  const [modalCrudType, setModalCrudType] = useState(null); // 'client', 'product', 'service', 'supplier'
+  const [editingItem, setEditingItem] = useState(null);
+
+  // Form State para Nova OS
+  const [osForm, setOsForm] = useState({
+    clientId: '',
+    deliveryDate: '',
+    priority: 'Média',
+    techNotes: '',
+    discount: 0,
+    advancePayment: 0,
+    items: [
+      { id: Date.now(), serviceId: '', description: '', calcType: 'unit', width: 1, height: 1, qty: 1, unitPrice: 0, total: 0, finishing: '' }
+    ]
+  });
+
+  // Helper para formatação de moeda
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+  };
+
+  // Funções de atualização de status de OS
+  const handleUpdateOSStatus = (orderId, newStatus) => {
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+  };
+
+  // Cálculo totais da OS em criação
+  const handleOSItemChange = (index, field, value) => {
+    const updatedItems = [...osForm.items];
+    const item = { ...updatedItems[index], [field]: value };
+
+    // Se selecionou um serviço cadastrado
+    if (field === 'serviceId') {
+      const selectedSvc = services.find(s => s.id === parseInt(value));
+      if (selectedSvc) {
+        item.description = selectedSvc.name;
+        item.calcType = selectedSvc.billingType;
+        item.unitPrice = selectedSvc.basePrice;
+      }
+    }
+
+    // Recalcular Total do item
+    if (item.calcType === 'm2') {
+      const area = (parseFloat(item.width) || 0) * (parseFloat(item.height) || 0);
+      item.total = area * (parseFloat(item.qty) || 1) * (parseFloat(item.unitPrice) || 0);
+    } else {
+      item.total = (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0);
+    }
+
+    updatedItems[index] = item;
+    setOsForm({ ...osForm, items: updatedItems });
+  };
+
+  const handleAddOSItem = () => {
+    setOsForm({
+      ...osForm,
+      items: [
+        ...osForm.items,
+        { id: Date.now(), serviceId: '', description: '', calcType: 'unit', width: 1, height: 1, qty: 1, unitPrice: 0, total: 0, finishing: '' }
+      ]
+    });
+  };
+
+  const handleRemoveOSItem = (index) => {
+    if (osForm.items.length === 1) return;
+    const updated = osForm.items.filter((_, i) => i !== index);
+    setOsForm({ ...osForm, items: updated });
+  };
+
+  // Salvar Nova OS
+  const handleSaveOS = (e) => {
+    e.preventDefault();
+    const client = clients.find(c => c.id === parseInt(osForm.clientId));
+    if (!client) return alert('Selecione um cliente válido.');
+
+    const subtotal = osForm.items.reduce((acc, item) => acc + (item.total || 0), 0);
+    const total = subtotal - (parseFloat(osForm.discount) || 0);
+
+    const newOS = {
+      id: 1000 + orders.length + 1,
+      clientName: client.name,
+      clientId: client.id,
+      date: new Date().toISOString().split('T')[0],
+      deliveryDate: osForm.deliveryDate || new Date().toISOString().split('T')[0],
+      status: 'Aguardando Arte',
+      priority: osForm.priority,
+      items: osForm.items,
+      total: total,
+      discount: parseFloat(osForm.discount) || 0,
+      advancePayment: parseFloat(osForm.advancePayment) || 0,
+      techNotes: osForm.techNotes
+    };
+
+    setOrders([newOS, ...orders]);
+    
+    // Se houve sinal pago, lança no financeiro
+    if (newOS.advancePayment > 0) {
+      setFinances(prev => [
+        {
+          id: Date.now(),
+          date: newOS.date,
+          type: 'Entrada',
+          category: `Sinal OS (#${newOS.id})`,
+          description: `Sinal recebido do cliente ${client.name}`,
+          amount: newOS.advancePayment
+        },
+        ...prev
+      ]);
+    }
+
+    setIsNewOSOpen(false);
+    // Reset form
+    setOsForm({
+      clientId: '',
+      deliveryDate: '',
+      priority: 'Média',
+      techNotes: '',
+      discount: 0,
+      advancePayment: 0,
+      items: [{ id: Date.now(), serviceId: '', description: '', calcType: 'unit', width: 1, height: 1, qty: 1, unitPrice: 0, total: 0, finishing: '' }]
+    });
+  };
+
+  // Handlers genéricos para Cadastros (CRUD)
+  const handleSaveGenericCrud = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+
+    if (modalCrudType === 'client') {
+      if (editingItem) {
+        setClients(clients.map(c => c.id === editingItem.id ? { ...c, ...data } : c));
+      } else {
+        setClients([...clients, { id: Date.now(), ...data }]);
+      }
+    } else if (modalCrudType === 'product') {
+      const formatted = {
+        ...data,
+        cost: parseFloat(data.cost) || 0,
+        price: parseFloat(data.price) || 0,
+        stock: parseInt(data.stock) || 0,
+        minStock: parseInt(data.minStock) || 0,
+      };
+      if (editingItem) {
+        setProducts(products.map(p => p.id === editingItem.id ? { ...p, ...formatted } : p));
+      } else {
+        setProducts([...products, { id: Date.now(), ...formatted }]);
+      }
+    } else if (modalCrudType === 'service') {
+      const formatted = {
+        ...data,
+        basePrice: parseFloat(data.basePrice) || 0
+      };
+      if (editingItem) {
+        setServices(services.map(s => s.id === editingItem.id ? { ...s, ...formatted } : s));
+      } else {
+        setServices([...services, { id: Date.now(), ...formatted }]);
+      }
+    } else if (modalCrudType === 'supplier') {
+      if (editingItem) {
+        setSuppliers(suppliers.map(s => s.id === editingItem.id ? { ...s, ...data } : s));
+      } else {
+        setSuppliers([...suppliers, { id: Date.now(), ...data }]);
+      }
+    }
+
+    setModalCrudType(null);
+    setEditingItem(null);
+  };
+
+  // Dashboard Stats
+  const dashboardStats = useMemo(() => {
+    const totalSalesMonth = orders.reduce((acc, o) => acc + o.total, 0);
+    const openOrders = orders.filter(o => o.status !== 'Entregue').length;
+    const inProductionOrders = orders.filter(o => ['Pré-Impressão', 'Em Impressão', 'Acabamento'].includes(o.status)).length;
+    const clientCount = clients.length;
+
+    return { totalSalesMonth, openOrders, inProductionOrders, clientCount };
+  }, [orders, clients]);
+
+  return (
+    <div className="flex h-screen bg-slate-900 text-slate-100 font-sans overflow-hidden">
+      
+      {/* SIDEBAR NAVEGAÇÃO */}
+      <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0">
+        <div className="p-5 border-b border-slate-800 flex items-center gap-3">
+          <div className="p-2 bg-indigo-600 rounded-lg text-white">
+            <Printer className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="font-bold text-lg leading-tight tracking-wide text-white">PrintFlow</h1>
+            <p className="text-xs text-indigo-400 font-medium">ERP Gráfica Rápida</p>
+          </div>
+        </div>
+
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'dashboard' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+            }`}
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            Dashboard Overview
+          </button>
+
+          <button
+            onClick={() => setActiveTab('orders')}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'orders' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <FileText className="w-5 h-5" />
+              Ordens de Serviço
+            </div>
+            {dashboardStats.openOrders > 0 && (
+              <span className="bg-amber-500/20 text-amber-300 text-xs px-2 py-0.5 rounded-full font-bold">
+                {dashboardStats.openOrders}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('kanban')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'kanban' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+            }`}
+          >
+            <Kanban className="w-5 h-5" />
+            Esteira de Produção
+          </button>
+
+          <div className="pt-4 pb-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            Gestão & Cadastros
+          </div>
+
+          <button
+            onClick={() => setActiveTab('clients')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'clients' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+            }`}
+          >
+            <Users className="w-5 h-5" />
+            Clientes
+          </button>
+
+          <button
+            onClick={() => setActiveTab('products')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'products' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+            }`}
+          >
+            <Package className="w-5 h-5" />
+            Produtos & Insumos
+          </button>
+
+          <button
+            onClick={() => setActiveTab('services')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'services' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+            }`}
+          >
+            <Wrench className="w-5 h-5" />
+            Catálogo de Serviços
+          </button>
+
+          <button
+            onClick={() => setActiveTab('suppliers')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'suppliers' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+            }`}
+          >
+            <Truck className="w-5 h-5" />
+            Fornecedores
+          </button>
+
+          <button
+            onClick={() => setActiveTab('finances')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'finances' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+            }`}
+          >
+            <DollarSign className="w-5 h-5" />
+            Financeiro Simplificado
+          </button>
+        </nav>
+
+        <div className="p-4 border-t border-slate-800 text-xs text-slate-500 text-center">
+          PrintFlow ERP v2.4 • Balcão & Produção
+        </div>
+      </aside>
+
+      {/* ÁREA PRINCIPAL */}
+      <main className="flex-1 flex flex-col overflow-hidden bg-slate-900">
+        
+        {/* HEADER SUPERIOR */}
+        <header className="h-16 border-b border-slate-800 bg-slate-950 px-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-bold text-white capitalize">
+              {activeTab === 'dashboard' && 'Dashboard Operacional'}
+              {activeTab === 'orders' && 'Gestão de Ordens de Serviço'}
+              {activeTab === 'kanban' && 'Esteira Kanban de Produção'}
+              {activeTab === 'clients' && 'Cadastro de Clientes'}
+              {activeTab === 'products' && 'Estoque de Produtos & Insumos'}
+              {activeTab === 'services' && 'Catálogo de Serviços e Precificação'}
+              {activeTab === 'suppliers' && 'Cadastro de Fornecedores'}
+              {activeTab === 'finances' && 'Fluxo Financeiro'}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsNewOSOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-2 shadow-lg shadow-emerald-900/20 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              Nova Ordem de Serviço
+            </button>
+          </div>
+        </header>
+
+        {/* CONTEÚDO DINÂMICO CONFORME A TAB */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+          {/* 1. DASHBOARD OVERVIEW */}
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6">
+              {/* CARDS KPI */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 shadow-sm">
+                  <div className="flex items-center justify-between text-slate-400 mb-2">
+                    <span className="text-sm font-medium">Vendas do Mês</span>
+                    <DollarSign className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div className="text-2xl font-bold text-white">{formatCurrency(dashboardStats.totalSalesMonth)}</div>
+                  <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+                    <TrendingUp className="w-3.5 h-3.5" /> +14.2% comparado ao mês anterior
+                  </p>
+                </div>
+
+                <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 shadow-sm">
+                  <div className="flex items-center justify-between text-slate-400 mb-2">
+                    <span className="text-sm font-medium">OS em Aberto</span>
+                    <Clock className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div className="text-2xl font-bold text-white">{dashboardStats.openOrders} <span className="text-sm font-normal text-slate-400">pedidos</span></div>
+                  <p className="text-xs text-slate-400 mt-2">Aguardando arte ou finalização</p>
+                </div>
+
+                <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 shadow-sm">
+                  <div className="flex items-center justify-between text-slate-400 mb-2">
+                    <span className="text-sm font-medium">OS em Produção</span>
+                    <Printer className="w-5 h-5 text-indigo-400" />
+                  </div>
+                  <div className="text-2xl font-bold text-white">{dashboardStats.inProductionOrders} <span className="text-sm font-normal text-slate-400">na máquina/mesa</span></div>
+                  <p className="text-xs text-indigo-400 mt-2">Impressão ou Acabamento</p>
+                </div>
+
+                <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 shadow-sm">
+                  <div className="flex items-center justify-between text-slate-400 mb-2">
+                    <span className="text-sm font-medium">Base de Clientes</span>
+                    <Users className="w-5 h-5 text-sky-400" />
+                  </div>
+                  <div className="text-2xl font-bold text-white">{dashboardStats.clientCount}</div>
+                  <p className="text-xs text-slate-400 mt-2">Clientes ativos cadastrados</p>
+                </div>
+              </div>
+
+              {/* GRÁFICO E STATUS DE OS */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-slate-800/80 border border-slate-700/60 rounded-xl p-5">
+                  <h3 className="text-base font-bold text-white mb-4 flex items-center justify-between">
+                    <span>Fluxo das Ordens de Serviço por Etapa</span>
+                    <span className="text-xs font-normal text-slate-400">Total: {orders.length} OS</span>
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    {STATUS_STAGES.map(stage => {
+                      const count = orders.filter(o => o.status === stage).length;
+                      const percentage = orders.length ? Math.round((count / orders.length) * 100) : 0;
+                      return (
+                        <div key={stage} className="space-y-1">
+                          <div className="flex justify-between text-xs font-medium">
+                            <span className="text-slate-300">{stage}</span>
+                            <span className="text-slate-400">{count} OS ({percentage}%)</span>
+                          </div>
+                          <div className="w-full h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-500 ${
+                                stage === 'Entregue' ? 'bg-emerald-500' :
+                                stage === 'Pronto para Retirada' ? 'bg-teal-400' :
+                                stage === 'Em Impressão' ? 'bg-indigo-500' :
+                                stage === 'Acabamento' ? 'bg-purple-500' :
+                                stage === 'Pré-Impressão' ? 'bg-blue-500' : 'bg-amber-500'
+                              }`}
+                              style={{ width: `${percentage}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ALERTAS DE ESTOQUE BAIXO */}
+                <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-white mb-3 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-amber-400" />
+                      Alerta de Estoque Mínimo
+                    </h3>
+                    <div className="divide-y divide-slate-700/60">
+                      {products.filter(p => p.stock <= p.minStock).length === 0 ? (
+                        <p className="text-sm text-slate-400 py-4 text-center">Nenhum insumo em nível crítico.</p>
+                      ) : (
+                        products.filter(p => p.stock <= p.minStock).map(prod => (
+                          <div key={prod.id} className="py-3 flex justify-between items-center text-sm">
+                            <div>
+                              <div className="font-medium text-slate-200">{prod.name}</div>
+                              <div className="text-xs text-slate-400">Mín: {prod.minStock} {prod.unit}</div>
+                            </div>
+                            <span className="px-2.5 py-1 bg-rose-500/20 text-rose-300 font-bold text-xs rounded-full">
+                              {prod.stock} {prod.unit}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => setActiveTab('products')}
+                    className="w-full mt-4 py-2 border border-slate-700 hover:bg-slate-700/50 rounded-lg text-xs font-medium text-slate-300 flex items-center justify-center gap-2 transition-colors"
+                  >
+                    Gerenciar Estoque Completo <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* RECENT OS LIST */}
+              <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-base font-bold text-white">Ordens de Serviço Recentes</h3>
+                  <button onClick={() => setActiveTab('orders')} className="text-xs text-indigo-400 hover:underline">Ver Todas</button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-900/60 text-slate-400 text-xs uppercase font-semibold">
+                      <tr>
+                        <th className="p-3">Nº OS</th>
+                        <th className="p-3">Cliente</th>
+                        <th className="p-3">Data Entrega</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3">Valor Total</th>
+                        <th className="p-3 text-right">Ação</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/50">
+                      {orders.slice(0, 5).map(os => (
+                        <tr key={os.id} className="hover:bg-slate-700/30">
+                          <td className="p-3 font-bold text-indigo-400">#{os.id}</td>
+                          <td className="p-3 text-slate-200">{os.clientName}</td>
+                          <td className="p-3 text-slate-400">{os.deliveryDate}</td>
+                          <td className="p-3">
+                            <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
+                              os.status === 'Entregue' ? 'bg-emerald-500/20 text-emerald-300' :
+                              os.status === 'Em Impressão' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-amber-500/20 text-amber-300'
+                            }`}>
+                              {os.status}
+                            </span>
+                          </td>
+                          <td className="p-3 font-medium text-slate-200">{formatCurrency(os.total)}</td>
+                          <td className="p-3 text-right">
+                            <button 
+                              onClick={() => setSelectedOSForView(os)}
+                              className="p-1.5 hover:bg-slate-700 text-slate-300 rounded"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 2. GESTÃO DE ORDENS DE SERVIÇO */}
+          {activeTab === 'orders' && (
+            <div className="space-y-4">
+              {/* BARRA DE PESQUISA E FILTROS */}
+              <div className="flex flex-col sm:flex-row justify-between gap-4 bg-slate-800/80 p-4 rounded-xl border border-slate-700/60">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por Nº OS ou nome do cliente..."
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button className="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2">
+                    <Filter className="w-4 h-4" /> Todos os Status
+                  </button>
+                </div>
+              </div>
+
+              {/* LISTA DE OS */}
+              <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-900/60 text-slate-400 text-xs uppercase font-semibold border-b border-slate-700/60">
+                      <tr>
+                        <th className="p-3.5">Nº OS</th>
+                        <th className="p-3.5">Cliente</th>
+                        <th className="p-3.5">Data Entrada</th>
+                        <th className="p-3.5">Prazo Entrega</th>
+                        <th className="p-3.5">Prioridade</th>
+                        <th className="p-3.5">Status Atual</th>
+                        <th className="p-3.5">Total OS</th>
+                        <th className="p-3.5 text-center">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/50">
+                      {orders.map(os => (
+                        <tr key={os.id} className="hover:bg-slate-700/30 transition-colors">
+                          <td className="p-3.5 font-bold text-indigo-400">#{os.id}</td>
+                          <td className="p-3.5 font-medium text-slate-200">{os.clientName}</td>
+                          <td className="p-3.5 text-slate-400">{os.date}</td>
+                          <td className="p-3.5 text-slate-300 font-medium">{os.deliveryDate}</td>
+                          <td className="p-3.5">
+                            <span className={`px-2 py-0.5 text-xs rounded font-semibold ${
+                              os.priority === 'Urgente' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
+                              os.priority === 'Alta' ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-700 text-slate-300'
+                            }`}>
+                              {os.priority}
+                            </span>
+                          </td>
+                          <td className="p-3.5">
+                            <select
+                              value={os.status}
+                              onChange={(e) => handleUpdateOSStatus(os.id, e.target.value)}
+                              className="bg-slate-900 border border-slate-700 text-xs rounded px-2.5 py-1.5 text-slate-200 focus:border-indigo-500"
+                            >
+                              {STATUS_STAGES.map(stg => (
+                                <option key={stg} value={stg}>{stg}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="p-3.5 font-bold text-slate-100">{formatCurrency(os.total)}</td>
+                          <td className="p-3.5 text-center">
+                            <button
+                              onClick={() => setSelectedOSForView(os)}
+                              className="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1.5"
+                            >
+                              <Eye className="w-3.5 h-3.5" /> Ver / Imprimir
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 3. GESTÃO DE PRODUÇÃO (KANBAN) */}
+          {activeTab === 'kanban' && (
+            <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-140px)]">
+              {STATUS_STAGES.map(stage => {
+                const stageOrders = orders.filter(o => o.status === stage);
+                return (
+                  <div key={stage} className="w-80 shrink-0 bg-slate-950 border border-slate-800 rounded-xl flex flex-col h-full">
+                    <div className="p-3.5 border-b border-slate-800 flex justify-between items-center bg-slate-900/60 rounded-t-xl">
+                      <h4 className="font-bold text-sm text-slate-200 flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                        {stage}
+                      </h4>
+                      <span className="bg-slate-800 text-slate-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                        {stageOrders.length}
+                      </span>
+                    </div>
+
+                    <div className="p-3 flex-1 overflow-y-auto space-y-3">
+                      {stageOrders.length === 0 ? (
+                        <div className="text-center py-8 text-xs text-slate-600 border border-dashed border-slate-800 rounded-lg">
+                          Nenhuma OS nesta etapa
+                        </div>
+                      ) : (
+                        stageOrders.map(os => (
+                          <div key={os.id} className="bg-slate-800 border border-slate-700/70 rounded-lg p-3.5 shadow-md hover:border-slate-500 transition-all space-y-2">
+                            <div className="flex justify-between items-start">
+                              <span className="font-bold text-indigo-400 text-xs">#{os.id}</span>
+                              <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${
+                                os.priority === 'Urgente' ? 'bg-rose-500/20 text-rose-300' : 'bg-slate-700 text-slate-300'
+                              }`}>
+                                {os.priority}
+                              </span>
+                            </div>
+
+                            <div className="font-medium text-slate-200 text-sm line-clamp-1">{os.clientName}</div>
+
+                            <div className="text-xs text-slate-400 space-y-1 bg-slate-900/50 p-2 rounded">
+                              {os.items.map((item, idx) => (
+                                <div key={idx} className="truncate">
+                                  • {item.qty}x {item.description}
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="flex justify-between items-center pt-2 text-xs border-t border-slate-700/50 text-slate-400">
+                              <span>Prazo: <strong className="text-slate-300">{os.deliveryDate}</strong></span>
+                              <button 
+                                onClick={() => setSelectedOSForView(os)}
+                                className="text-indigo-400 hover:text-indigo-300"
+                              >
+                                Detalhes
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 4. CADASTROS (CLIENTES, PRODUTOS, SERVIÇOS, FORNECEDORES) */}
+          {activeTab === 'clients' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-slate-400">Gerenciamento da base de clientes da gráfica</p>
+                <button
+                  onClick={() => { setEditingItem(null); setModalCrudType('client'); }}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-3.5 py-2 rounded-lg flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" /> Cadastrar Cliente
+                </button>
+              </div>
+
+              <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl overflow-hidden">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-900/60 text-slate-400 text-xs uppercase font-semibold">
+                    <tr>
+                      <th className="p-3.5">Nome / Razão Social</th>
+                      <th className="p-3.5">CPF / CNPJ</th>
+                      <th className="p-3.5">Telefone / WhatsApp</th>
+                      <th className="p-3.5">E-mail</th>
+                      <th className="p-3.5">Endereço</th>
+                      <th className="p-3.5 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-700/50">
+                    {clients.map(c => (
+                      <tr key={c.id} className="hover:bg-slate-700/30">
+                        <td className="p-3.5 font-medium text-slate-200">{c.name}</td>
+                        <td className="p-3.5 text-slate-400">{c.doc}</td>
+                        <td className="p-3.5 text-slate-300">{c.phone}</td>
+                        <td className="p-3.5 text-slate-400">{c.email}</td>
+                        <td className="p-3.5 text-slate-400 truncate max-w-xs">{c.address}</td>
+                        <td className="p-3.5 text-right space-x-2">
+                          <button onClick={() => { setEditingItem(c); setModalCrudType('client'); }} className="text-slate-400 hover:text-white p-1">
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setClients(clients.filter(item => item.id !== c.id))} className="text-rose-400 hover:text-rose-300 p-1">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'products' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-slate-400">Matérias-primas e produtos comercializados no balcão</p>
+                <button
+                  onClick={() => { setEditingItem(null); setModalCrudType('product'); }}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-3.5 py-2 rounded-lg flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" /> Novo Insumo/Produto
+                </button>
+              </div>
+
+              <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl overflow-hidden">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-900/60 text-slate-400 text-xs uppercase font-semibold">
+                    <tr>
+                      <th className="p-3.5">Item</th>
+                      <th className="p-3.5">Tipo</th>
+                      <th className="p-3.5">Unidade</th>
+                      <th className="p-3.5">Custo Base</th>
+                      <th className="p-3.5">Preço Venda</th>
+                      <th className="p-3.5">Estoque Atual</th>
+                      <th className="p-3.5 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-700/50">
+                    {products.map(p => (
+                      <tr key={p.id} className="hover:bg-slate-700/30">
+                        <td className="p-3.5 font-medium text-slate-200">{p.name}</td>
+                        <td className="p-3.5 text-slate-400">{p.type}</td>
+                        <td className="p-3.5 text-slate-300">{p.unit}</td>
+                        <td className="p-3.5 text-slate-400">{formatCurrency(p.cost)}</td>
+                        <td className="p-3.5 font-medium text-emerald-400">{formatCurrency(p.price)}</td>
+                        <td className="p-3.5">
+                          <span className={`px-2 py-0.5 text-xs rounded font-bold ${
+                            p.stock <= p.minStock ? 'bg-rose-500/20 text-rose-300' : 'bg-slate-700 text-slate-200'
+                          }`}>
+                            {p.stock} {p.unit}
+                          </span>
+                        </td>
+                        <td className="p-3.5 text-right space-x-2">
+                          <button onClick={() => { setEditingItem(p); setModalCrudType('product'); }} className="text-slate-400 hover:text-white p-1">
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setProducts(products.filter(item => item.id !== p.id))} className="text-rose-400 hover:text-rose-300 p-1">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'services' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-slate-400">Serviços da gráfica e critérios de cálculo de preço</p>
+                <button
+                  onClick={() => { setEditingItem(null); setModalCrudType('service'); }}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-3.5 py-2 rounded-lg flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" /> Novo Serviço
+                </button>
+              </div>
+
+              <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl overflow-hidden">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-900/60 text-slate-400 text-xs uppercase font-semibold">
+                    <tr>
+                      <th className="p-3.5">Serviço</th>
+                      <th className="p-3.5">Categoria</th>
+                      <th className="p-3.5">Tipo Cobrança</th>
+                      <th className="p-3.5">Preço Base</th>
+                      <th className="p-3.5 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-700/50">
+                    {services.map(s => (
+                      <tr key={s.id} className="hover:bg-slate-700/30">
+                        <td className="p-3.5 font-medium text-slate-200">{s.name}</td>
+                        <td className="p-3.5 text-slate-400">{s.category}</td>
+                        <td className="p-3.5 text-slate-300">
+                          <span className="px-2 py-0.5 text-xs bg-slate-700 rounded">
+                            {s.billingType === 'm2' ? 'Por Metro Quadrado (m²)' : 'Unidade Fixa'}
+                          </span>
+                        </td>
+                        <td className="p-3.5 font-bold text-emerald-400">{formatCurrency(s.basePrice)}</td>
+                        <td className="p-3.5 text-right space-x-2">
+                          <button onClick={() => { setEditingItem(s); setModalCrudType('service'); }} className="text-slate-400 hover:text-white p-1">
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setServices(services.filter(item => item.id !== s.id))} className="text-rose-400 hover:text-rose-300 p-1">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'suppliers' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-slate-400">Fornecedores de chapas, papéis, lonas e manutenção</p>
+                <button
+                  onClick={() => { setEditingItem(null); setModalCrudType('supplier'); }}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-3.5 py-2 rounded-lg flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" /> Cadastrar Fornecedor
+                </button>
+              </div>
+
+              <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl overflow-hidden">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-900/60 text-slate-400 text-xs uppercase font-semibold">
+                    <tr>
+                      <th className="p-3.5">Empresa</th>
+                      <th className="p-3.5">Pessoa Contato</th>
+                      <th className="p-3.5">Telefone</th>
+                      <th className="p-3.5">E-mail</th>
+                      <th className="p-3.5">Categoria</th>
+                      <th className="p-3.5 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-700/50">
+                    {suppliers.map(sup => (
+                      <tr key={sup.id} className="hover:bg-slate-700/30">
+                        <td className="p-3.5 font-medium text-slate-200">{sup.name}</td>
+                        <td className="p-3.5 text-slate-300">{sup.contact}</td>
+                        <td className="p-3.5 text-slate-400">{sup.phone}</td>
+                        <td className="p-3.5 text-slate-400">{sup.email}</td>
+                        <td className="p-3.5">
+                          <span className="px-2 py-0.5 text-xs bg-indigo-500/20 text-indigo-300 rounded font-medium">
+                            {sup.category}
+                          </span>
+                        </td>
+                        <td className="p-3.5 text-right space-x-2">
+                          <button onClick={() => { setEditingItem(sup); setModalCrudType('supplier'); }} className="text-slate-400 hover:text-white p-1">
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setSuppliers(suppliers.filter(item => item.id !== sup.id))} className="text-rose-400 hover:text-rose-300 p-1">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 5. FINANCEIRO SIMPLIFICADO */}
+          {activeTab === 'finances' && (
+            <div className="space-y-6">
+              {/* RESUMO FINANCEIRO */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5">
+                  <div className="text-xs text-slate-400 mb-1">Total de Entradas</div>
+                  <div className="text-2xl font-bold text-emerald-400">
+                    {formatCurrency(finances.filter(f => f.type === 'Entrada').reduce((acc, curr) => acc + curr.amount, 0))}
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5">
+                  <div className="text-xs text-slate-400 mb-1">Total de Saídas / Despesas</div>
+                  <div className="text-2xl font-bold text-rose-400">
+                    {formatCurrency(finances.filter(f => f.type === 'Saída').reduce((acc, curr) => acc + curr.amount, 0))}
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5">
+                  <div className="text-xs text-slate-400 mb-1">Saldo do Período</div>
+                  <div className="text-2xl font-bold text-indigo-400">
+                    {formatCurrency(
+                      finances.filter(f => f.type === 'Entrada').reduce((a, b) => a + b.amount, 0) -
+                      finances.filter(f => f.type === 'Saída').reduce((a, b) => a + b.amount, 0)
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* TABELA DE LANÇAMENTOS */}
+              <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 space-y-4">
+                <h3 className="text-base font-bold text-white">Extrato de Movimentações</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-900/60 text-slate-400 text-xs uppercase font-semibold">
+                      <tr>
+                        <th className="p-3">Data</th>
+                        <th className="p-3">Tipo</th>
+                        <th className="p-3">Categoria</th>
+                        <th className="p-3">Descrição</th>
+                        <th className="p-3 text-right">Valor</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/50">
+                      {finances.map(f => (
+                        <tr key={f.id} className="hover:bg-slate-700/30">
+                          <td className="p-3 text-slate-400">{f.date}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 text-xs rounded font-bold ${
+                              f.type === 'Entrada' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                            }`}>
+                              {f.type}
+                            </span>
+                          </td>
+                          <td className="p-3 text-slate-300">{f.category}</td>
+                          <td className="p-3 text-slate-400">{f.description}</td>
+                          <td className={`p-3 text-right font-bold ${f.type === 'Entrada' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {f.type === 'Entrada' ? '+' : '-'} {formatCurrency(f.amount)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </main>
+
+      {/* MODAL: NOVA ORDEM DE SERVIÇO */}
+      {isNewOSOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
+            <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+              <h3 className="font-bold text-lg text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-indigo-400" /> Nova Ordem de Serviço
+              </h3>
+              <button onClick={() => setIsNewOSOpen(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveOS} className="p-6 overflow-y-auto space-y-6 flex-1 text-sm">
+              {/* DADOS GERAIS */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Cliente *</label>
+                  <select
+                    required
+                    value={osForm.clientId}
+                    onChange={(e) => setOsForm({ ...osForm, clientId: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:border-indigo-500"
+                  >
+                    <option value="">Selecione um cliente...</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Prazo de Entrega *</label>
+                  <input
+                    type="date"
+                    required
+                    value={osForm.deliveryDate}
+                    onChange={(e) => setOsForm({ ...osForm, deliveryDate: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Prioridade</label>
+                  <select
+                    value={osForm.priority}
+                    onChange={(e) => setOsForm({ ...osForm, priority: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:border-indigo-500"
+                  >
+                    <option value="Baixa">Baixa</option>
+                    <option value="Média">Média</option>
+                    <option value="Alta">Alta</option>
+                    <option value="Urgente">Urgente</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* ITENS DA OS */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-bold text-slate-200">Itens / Serviços da OS</h4>
+                  <button
+                    type="button"
+                    onClick={handleAddOSItem}
+                    className="text-xs bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600 hover:text-white px-2.5 py-1.5 rounded flex items-center gap-1 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Adicionar Item
+                  </button>
+                </div>
+
+                {osForm.items.map((item, index) => (
+                  <div key={item.id} className="bg-slate-800/60 border border-slate-700/80 p-4 rounded-lg space-y-3 relative">
+                    {osForm.items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveOSItem(index)}
+                        className="absolute top-3 right-3 text-rose-400 hover:text-rose-300"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">Serviço do Catálogo</label>
+                        <select
+                          value={item.serviceId}
+                          onChange={(e) => handleOSItemChange(index, 'serviceId', e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200"
+                        >
+                          <option value="">Serviço Personalizado</option>
+                          {services.map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="md:col-span-3">
+                        <label className="block text-[11px] text-slate-400 mb-1">Descrição / Especificação do Item</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Ex: Banner Lona 440g para balcão"
+                          value={item.description}
+                          onChange={(e) => handleOSItemChange(index, 'description', e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">Cálculo</label>
+                        <select
+                          value={item.calcType}
+                          onChange={(e) => handleOSItemChange(index, 'calcType', e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200"
+                        >
+                          <option value="unit">Por Unidade</option>
+                          <option value="m2">Por m²</option>
+                        </select>
+                      </div>
+
+                      {item.calcType === 'm2' && (
+                        <>
+                          <div>
+                            <label className="block text-[11px] text-slate-400 mb-1">Largura (m)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={item.width}
+                              onChange={(e) => handleOSItemChange(index, 'width', e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-slate-400 mb-1">Altura (m)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={item.height}
+                              onChange={(e) => handleOSItemChange(index, 'height', e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200"
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">Qtd</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.qty}
+                          onChange={(e) => handleOSItemChange(index, 'qty', e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">Preço Base (R$)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={item.unitPrice}
+                          onChange={(e) => handleOSItemChange(index, 'unitPrice', e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">Subtotal Item</label>
+                        <div className="font-bold text-emerald-400 p-2 text-xs bg-slate-900 rounded border border-slate-800">
+                          {formatCurrency(item.total)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Acabamentos (opcional)</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: Ilhós a cada 50cm, Bastão e Corda, Verniz..."
+                        value={item.finishing}
+                        onChange={(e) => handleOSItemChange(index, 'finishing', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* VALORES E SINAL */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-800">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Desconto (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={osForm.discount}
+                    onChange={(e) => setOsForm({ ...osForm, discount: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Sinal / Pagamento Inicial (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={osForm.advancePayment}
+                    onChange={(e) => setOsForm({ ...osForm, advancePayment: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200"
+                  />
+                </div>
+
+                <div className="bg-indigo-950/40 border border-indigo-500/30 p-3 rounded-lg flex flex-col justify-between">
+                  <span className="text-xs text-indigo-300">Valor Total da OS:</span>
+                  <span className="text-2xl font-bold text-emerald-400">
+                    {formatCurrency(
+                      osForm.items.reduce((acc, i) => acc + (i.total || 0), 0) - (parseFloat(osForm.discount) || 0)
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {/* OBSERVAÇÕES TÉCNICAS */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Observações Técnicas / Produção</label>
+                <textarea
+                  rows="2"
+                  placeholder="Informações sobre perfil de cor, especificações de sangria, etc."
+                  value={osForm.techNotes}
+                  onChange={(e) => setOsForm({ ...osForm, techNotes: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs"
+                ></textarea>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsNewOSOpen(false)}
+                  className="px-4 py-2 border border-slate-700 rounded-lg text-slate-300 hover:bg-slate-800"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" /> Gerar Ordem de Serviço
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: VISUALIZAÇÃO / IMPRESSÃO DE ESPELHO DA OS */}
+      {selectedOSForView && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+              <h3 className="font-bold text-slate-200 flex items-center gap-2">
+                Espelho de Impressão - OS #{selectedOSForView.id}
+              </h3>
+              <button onClick={() => setSelectedOSForView(null)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* DOCUMENTO IMPRESSO SIMULADO */}
+            <div className="p-6 overflow-y-auto space-y-6 bg-white text-slate-900 font-mono text-xs">
+              <div className="flex justify-between border-b-2 border-slate-900 pb-4">
+                <div>
+                  <h2 className="text-xl font-bold uppercase tracking-wider">PRINTFLOW GRÁFICA</h2>
+                  <p>Rua da Imprensa, 1000 - Centro</p>
+                  <p>Tel / WhatsApp: (11) 99999-8888</p>
+                </div>
+                <div className="text-right">
+                  <h3 className="text-lg font-bold">ORDEM DE SERVIÇO #{selectedOSForView.id}</h3>
+                  <p>Emissão: {selectedOSForView.date}</p>
+                  <p>Entrega: <strong>{selectedOSForView.deliveryDate}</strong></p>
+                </div>
+              </div>
+
+              <div>
+                <p className="font-bold border-b border-slate-300 pb-1 mb-1">DADOS DO CLIENTE:</p>
+                <p><strong>Nome:</strong> {selectedOSForView.clientName}</p>
+                <p><strong>Status OS:</strong> {selectedOSForView.status} | <strong>Prioridade:</strong> {selectedOSForView.priority}</p>
+              </div>
+
+              <div>
+                <p className="font-bold border-b border-slate-300 pb-1 mb-2">ITENS DO PEDIDO:</p>
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-400">
+                      <th className="py-1">Descrição</th>
+                      <th className="py-1">Dimensão</th>
+                      <th className="py-1">Qtd</th>
+                      <th className="py-1">Acabamento</th>
+                      <th className="py-1 text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedOSForView.items.map((item, i) => (
+                      <tr key={i} className="border-b border-slate-200">
+                        <td className="py-2">{item.description}</td>
+                        <td className="py-2">{item.calcType === 'm2' ? `${item.width}m x ${item.height}m` : 'N/A'}</td>
+                        <td className="py-2">{item.qty}</td>
+                        <td className="py-2">{item.finishing || 'Nenhum'}</td>
+                        <td className="py-2 text-right">{formatCurrency(item.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {selectedOSForView.techNotes && (
+                <div className="bg-slate-100 p-3 rounded border border-slate-300">
+                  <p className="font-bold">OBSERVAÇÕES TÉCNICAS / IMPRESSÃO:</p>
+                  <p>{selectedOSForView.techNotes}</p>
+                </div>
+              )}
+
+              <div className="border-t-2 border-slate-900 pt-3 flex justify-between items-end">
+                <div>
+                  <p>Sinal Pago: {formatCurrency(selectedOSForView.advancePayment)}</p>
+                  <p>Restante no Levantamento: {formatCurrency(selectedOSForView.total - selectedOSForView.advancePayment)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-base font-bold">TOTAL: {formatCurrency(selectedOSForView.total)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-950 border-t border-slate-800 flex justify-end gap-3">
+              <button
+                onClick={() => window.print()}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg text-xs flex items-center gap-2"
+              >
+                <Printer className="w-4 h-4" /> Imprimir Comprovante / OS
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CRUD GENÉRICO (CLIENTES, PRODUTOS, SERVIÇOS, FORNECEDORES) */}
+      {modalCrudType && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md p-6 space-y-4">
+            <h3 className="text-lg font-bold text-white capitalize">
+              {editingItem ? 'Editar' : 'Novo'} {
+                modalCrudType === 'client' ? 'Cliente' :
+                modalCrudType === 'product' ? 'Produto/Insumo' :
+                modalCrudType === 'service' ? 'Serviço' : 'Fornecedor'
+              }
+            </h3>
+
+            <form onSubmit={handleSaveGenericCrud} className="space-y-3 text-sm">
+              {modalCrudType === 'client' && (
+                <>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Nome / Razão Social</label>
+                    <input name="name" defaultValue={editingItem?.name} required className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">CPF / CNPJ</label>
+                    <input name="doc" defaultValue={editingItem?.doc} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Telefone / WhatsApp</label>
+                    <input name="phone" defaultValue={editingItem?.phone} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">E-mail</label>
+                    <input name="email" defaultValue={editingItem?.email} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                </>
+              )}
+
+              {modalCrudType === 'product' && (
+                <>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Nome do Item</label>
+                    <input name="name" defaultValue={editingItem?.name} required className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Tipo</label>
+                    <select name="type" defaultValue={editingItem?.type || 'Matéria-Prima'} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white">
+                      <option value="Matéria-Prima">Matéria-Prima</option>
+                      <option value="Produto Acabado">Produto Acabado</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Unidade</label>
+                    <input name="unit" defaultValue={editingItem?.unit || 'm²'} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Preço Custo</label>
+                      <input name="cost" type="number" step="0.01" defaultValue={editingItem?.cost} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Estoque Inicial</label>
+                      <input name="stock" type="number" defaultValue={editingItem?.stock || 0} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {modalCrudType === 'service' && (
+                <>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Nome do Serviço</label>
+                    <input name="name" defaultValue={editingItem?.name} required className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Categoria</label>
+                    <input name="category" defaultValue={editingItem?.category || 'Gráfica Rápida'} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Tipo de Cobrança</label>
+                    <select name="billingType" defaultValue={editingItem?.billingType || 'm2'} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white">
+                      <option value="m2">Por Metro Quadrado (m²)</option>
+                      <option value="unit">Unidade Fixa</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Preço Base (R$)</label>
+                    <input name="basePrice" type="number" step="0.01" defaultValue={editingItem?.basePrice} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                </>
+              )}
+
+              {modalCrudType === 'supplier' && (
+                <>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Empresa</label>
+                    <input name="name" defaultValue={editingItem?.name} required className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Contato</label>
+                    <input name="contact" defaultValue={editingItem?.contact} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Telefone</label>
+                    <input name="phone" defaultValue={editingItem?.phone} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white" />
+                  </div>
+                </>
+              )}
+
+              <div className="flex justify-end gap-2 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setModalCrudType(null)}
+                  className="px-3 py-1.5 border border-slate-700 rounded text-slate-300 text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded text-xs"
+                >
+                  Salvar Registro
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
